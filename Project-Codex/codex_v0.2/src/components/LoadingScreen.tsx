@@ -14,12 +14,27 @@ export default function LoadingScreen({ children }: LoadingScreenProps) {
   const [entering, setEntering] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+  const [shouldRenderLoader, setShouldRenderLoader] = useState(true);
+  const [isChecking, setIsChecking] = useState(true);
   
   // Word animation state
   const [visibleWords, setVisibleWords] = useState(0);
   const introWords = ["AND", "SO,", "IT", "BEGINS..."];
 
   useEffect(() => {
+    // Check if we've already shown the intro in this session
+    const hasSeenIntro = sessionStorage.getItem('codex_intro_shown');
+    
+    if (hasSeenIntro) {
+      setShouldRenderLoader(false);
+      setShowContent(true);
+    }
+    setIsChecking(false);
+  }, []);
+
+  useEffect(() => {
+    if (!shouldRenderLoader) return;
+
     // Start showing words one by one
     const wordInterval = setInterval(() => {
       setVisibleWords(prev => (prev < introWords.length ? prev + 1 : prev));
@@ -34,9 +49,11 @@ export default function LoadingScreen({ children }: LoadingScreenProps) {
       clearInterval(wordInterval);
       clearTimeout(fadeTimer);
     };
-  }, []);
+  }, [shouldRenderLoader]);
 
   useEffect(() => {
+    if (!shouldRenderLoader) return;
+
     const handleScroll = (e: WheelEvent) => {
       // Only trigger if animation is done, we haven't started entering, and user scrolls down
       if (animationComplete && !entering && e.deltaY > 0) {
@@ -46,7 +63,22 @@ export default function LoadingScreen({ children }: LoadingScreenProps) {
     
     window.addEventListener('wheel', handleScroll);
     return () => window.removeEventListener('wheel', handleScroll);
-  }, [animationComplete, entering]);
+  }, [animationComplete, entering, shouldRenderLoader]);
+
+  // Mark intro as seen when content is finally shown
+  useEffect(() => {
+    if (showContent) {
+      sessionStorage.setItem('codex_intro_shown', 'true');
+    }
+  }, [showContent]);
+
+  if (isChecking) {
+    return <div className="min-h-screen w-full bg-black" />;
+  }
+
+  if (!shouldRenderLoader) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-black">

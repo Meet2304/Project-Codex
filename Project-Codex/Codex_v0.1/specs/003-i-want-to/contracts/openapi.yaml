@@ -1,0 +1,180 @@
+openapi: 3.1.0
+info:
+  title: Project Codex Public API
+  version: 0.1.0
+  description: Read-only public endpoints for content (person, principles, projects, tags, nav, settings).
+servers:
+  - url: https://api.project-codex.example.com
+paths:
+  /v1/person:
+    get:
+      summary: Get person profile
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+  /v1/principles:
+    get:
+      summary: List published principles
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Principle'
+  /v1/projects:
+    get:
+      summary: List published projects
+      parameters:
+        - in: query
+          name: tag
+          schema:
+            type: string
+          description: Filter by tag
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [recency]
+          description: Sort order (default recency)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+  /v1/projects/{slug}:
+    get:
+      summary: Get project by slug
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDetail'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/tags:
+    get:
+      summary: List tags
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+  /v1/nav:
+    get:
+      summary: Get navigation items
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NavItem'
+  /v1/settings:
+    get:
+      summary: Get site settings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteSettings'
+components:
+  schemas:
+    Person:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        tagline: { type: string }
+        bio: { type: string }
+        avatar_url: { type: string, nullable: true }
+      required: [id, name]
+    Principle:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        summary: { type: string }
+        order_index: { type: integer }
+      required: [id, title]
+    Project:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        slug: { type: string }
+        summary: { type: string }
+        hero_media_url: { type: string, nullable: true }
+        tags:
+          type: array
+          items: { $ref: '#/components/schemas/Tag' }
+      required: [id, title, slug]
+    ProjectDetail:
+      allOf:
+        - $ref: '#/components/schemas/Project'
+        - type: object
+          properties:
+            description: { type: string }
+            created_at: { type: string, format: date-time }
+            updated_at: { type: string, format: date-time }
+    Tag:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+      required: [id, name]
+    NavItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        label: { type: string }
+        path: { type: string }
+        order_index: { type: integer }
+        visible: { type: boolean }
+      required: [id, label, path]
+    SiteSettings:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        site_title: { type: string }
+        primary_cta_label: { type: string }
+        language: { type: string, enum: ['en'] }
+        updated_at: { type: string, format: date-time }
+      required: [id, site_title, language]
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+        message: { type: string }
+        request_id: { type: string }
+      required: [error]

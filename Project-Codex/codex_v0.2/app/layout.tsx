@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ProgressiveBlur } from "@/components/progressive-blur";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,10 +25,25 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={geistSans.className}>
+        {/* 2. Add Top Blur */}
+        <ProgressiveBlur 
+          position="top" 
+          height="100px" 
+          blurAmount="4px" 
+          backgroundColor="#09090b" 
+        />
+
+        {/* This is where your page content (Home, About, etc.) goes */}
         {children}
+
+        {/* 3. Add Bottom Blur */}
+        <ProgressiveBlur 
+          position="bottom" 
+          height="100px" 
+          blurAmount="4px" 
+          backgroundColor="#09090b" 
+        />
       </body>
     </html>
   );
